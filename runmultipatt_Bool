@@ -1,0 +1,26 @@
+runmultipatt_Bool <- function(File_toAnosin, tam, listadecolumnas,fileprefix){
+  datos = read.csv(File_toAnosin)
+  col_buenas=2:(tam-1)
+  pvals=list()
+  statisticMLTP=list()
+  summary_outputs <- vector( "list", length = length(listadecolumnas) )
+  for (i in listadecolumnas ) {
+    set.seed(123)
+    print(colnames(datos[i]))
+    toremoverows = is.na(datos[, i])|datos[, i]==""|datos[, i]=="no_data"|datos[, i]=="IV"#&rowSums(datos[,col_buenas])>0
+    data_cleaned <- datos[ !toremoverows, col_buenas ]
+    distance_matrix <- data_cleaned # Extract distance matrix
+    normalized_matrix <- t(apply(distance_matrix, 1, function(row) row / sum(row) * 100))
+    
+    var2 = datos[!toremoverows,i]
+    Mat3=distance_matrix
+    Mat3[distance_matrix>0]=1
+    speciesdiferencias<-multipatt(Mat3,var2,func="r.g",control = how(nperm=9999))
+    
+    pvals=rbind(pvals, speciesdiferencias$sign$p.value)
+    statisticMLTP=rbind(pvals, speciesdiferencias$sign$stat)
+    output_file <- paste0(fileprefix,"_summary_output_",as.character(dim(normalized_matrix)[0]),"_", colnames(datos[i]), ".txt")
+    capture.output(summary(speciesdiferencias), file = output_file)
+    summary_outputs[[i]] <- summary(speciesdiferencias)
+  }
+}
