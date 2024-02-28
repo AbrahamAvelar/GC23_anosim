@@ -1,0 +1,27 @@
+#ANOSIM individual samples. Species level. Five grouping categories alpha = 0.01
+muestras<-read.table("../AllMetadata_Samples_toTests_Yeast1.7_V3.csv",h=T,sep=",")
+names(muestras)
+muestras$Region<-as.factor(muestras$Region)
+muestras$Community<-as.factor(muestras$Community)
+muestras$Climate_Group<-as.factor(muestras$Climate_Group)
+muestras$Fermentation_phase<-as.factor(muestras$Fermentation_phase)
+muestras$Tank_material<-as.factor(muestras$Tank_material)
+muestras$pH<-as.numeric(muestras$pH)
+muestras$Location_ID<-as.factor(muestras$Location_ID)
+
+library(vegan)
+
+samples<-as.matrix(muestras[,2:19])
+samples2<-vegdist(samples, method="jaccard", binary=TRUE)
+anosimRegion<-anosim(samples2,grouping=muestras$Region)
+anosimRegion
+#R: 0.0721 p: 0.011
+
+anosimClimate<-anosim(samples2,grouping=muestras$Climate_Group)
+anosimClimate
+#R: 0.059  p: 0.001
+
+#identificar taxa distintos entre grupos de anosim para Climate_Group
+library(indicspecies)
+spdifClimate<-multipatt(samples,muestras$Climate_Group,func="r.g",control = how(nperm=9999))
+summary(spdifClimate)
