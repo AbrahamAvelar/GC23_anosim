@@ -1,0 +1,34 @@
+runanosins_OneFile_boolJac <- function(File_toAnosin, toplot, prefixfile,tam){
+  data <- read.csv(File_toAnosin)
+  col_buenas=2:(tam-1)
+  results<- list()
+  sigific<- list()
+  statistic<- list()
+  for (i in colnames(data[tam:ncol(data)]) ) {
+    file_name <- i
+    cat("Processing:", file_name, "\n")
+    #data_cleaned <- data[!is.na(data[, i]), ] # Remove rows with NA values in the searched column
+    toremoverows = is.na(data[, i])|data[, i]==""|data[, i]=="no_data"|data[, i]=="IV"#&rowSums(datos[,col_buenas])>0
+    data_cleaned <- data[ !toremoverows, col_buenas ]
+    distance_matrix <- data_cleaned # Extract distance matrix
+    
+    Mat3=distance_matrix
+    Mat3[distance_matrix>0]=1
+    patito2<-vegdist(Mat3, method="jaccard", binary=TRUE)
+    set.seed(123)
+    anosim_result<-anosim(patito2,grouping=data[(!toremoverows),i],permutations=9999)
+    results[[file_name]] <- anosim_result
+    sigific[[file_name]] <- anosim_result$signif
+    statistic[[file_name]] <- anosim_result$statistic
+    
+    if (toplot==1){
+      anosim_plot <- plot(anosim_result, xlab = paste(as.character(dim(distance_matrix)[1]), file_name, distanceM))
+      anosim_plot_filename <- paste0(prefixfile,"_",file_name,distanceM, "_boolJac_anosim_plot.pdf")
+      pdf(file=anosim_plot_filename, width=20, height=8)
+      plot(anosim_result, xlab = paste(as.character(dim(distance_matrix)[1]), file_name, distanceM))
+      dev.off()
+    }
+  }
+  my_list <- list("Signif" = sigific, "Statistic" =statistic, "Results" =results)
+  return(my_list) 
+}
